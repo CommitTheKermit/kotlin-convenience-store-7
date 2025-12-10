@@ -1,5 +1,7 @@
 package store
 
+import store.contoroller.StoreController
+
 fun main() {
-    // TODO: 프로그램 구현
+    StoreController().run()
 }
