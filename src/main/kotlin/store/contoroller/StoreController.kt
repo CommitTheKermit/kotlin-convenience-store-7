@@ -1,5 +1,6 @@
 package store.contoroller
 
+import store.constants.ErrorMessages
 import store.model.PromotionResult
 import store.model.Order
 import store.model.OrderResult
@@ -27,10 +28,40 @@ class StoreController {
             OutputView.showShoppingGuide()
 
             val orders = Parser.orderParse(InputView.readLine())
-            processOrder(orders = orders, storage = storage)
-            val membershipYn : Boolean  = checkMembership()
+            val orderResults = processOrder(orders = orders, storage = storage)
+            val membershipYn: Boolean = checkMembership()
 
+            var totalCount = 0
+            var nonPromoPrice = 0
+            var promoPrice = 0
+            var totalPrice = 0
+            var promoDiscount = 0
+            var membershipDiscount = 0.0
+            orderResults.filter { it.product.promotion != null }.forEach {
+                promoPrice += (it.totalCount - it.promoCount) * it.product.price
+                promoDiscount += it.promoCount * it.product.price
+            }
+            orderResults.filter { it.product.promotion == null }.forEach {
+                nonPromoPrice += (it.totalCount - it.promoCount) * it.product.price
+            }
+            orderResults.forEach {
+                totalPrice += (it.totalCount) * it.product.price
+                totalCount += it.totalCount - it.promoCount
+            }
 
+            if (membershipYn) {
+                membershipDiscount = nonPromoPrice * 0.3
+            }
+
+            OutputView.showReceipt(
+                orderResults = orderResults,
+                totalCount = totalCount,
+                totalPrice = totalPrice,
+                nonPromoPrice = nonPromoPrice,
+                promoPrice = promoPrice,
+                promoDiscount = promoDiscount,
+                membershipDiscount = membershipDiscount,
+            )
         }
     }
 
@@ -43,21 +74,20 @@ class StoreController {
             }
 
             if (targetProducts.size > 1) {
-                val orderResult: OrderResult = promoProcess(targetProducts, order)
+                val processingResults: List<OrderResult> = promoProcess(targetProducts, order)
 
-                orderResults.add(orderResult)
+                orderResults.addAll(processingResults)
+            } else {
+                val processingResult: OrderResult = regularProcess(targetProducts.first(), order)
+
+                orderResults.add(processingResult)
             }
-
-
-//            else{
-//                regularProcess(targetProducts.first, order)
-//            }
         }
         return orderResults
 
     }
 
-    fun promoProcess(targetProducts: List<Product>, order: Order): OrderResult {
+    fun promoProcess(targetProducts: List<Product>, order: Order): List<OrderResult> {
         when (val result: PromotionResult = checkPromo(targetProducts, order)) {
             is PromotionResult.Promotional -> {
                 OutputView.showPromotional(result.product.name, result.promotion.get)
@@ -65,43 +95,56 @@ class StoreController {
                 if (promotionYn == "Y") {
                     order.count += result.promotion.get
                 }
-                return OrderResult(
-                    product = result.product,
-                    promotion = result.promotion,
-                    totalCount = order.count,
-                    promoCount = order.count
+                return listOf(
+                    OrderResult(
+                        product = result.product,
+                        totalCount = order.count,
+                        promoCount = (order.count / (result.promotion.buy + result.promotion.get)) * result.promotion.get
+                    )
                 )
             }
 
             is PromotionResult.NonPromotional -> {
-                OutputView.showNonPromotional(result.product.name, result.nonPromotional)
+                OutputView.showNonPromotional(result.promoProduct.name, result.nonPromotional)
                 val nonPromotionYn = InputView.readLine()
                 if (nonPromotionYn == "N") {
                     order.count = 0
-                    return OrderResult(
-                        product = result.product,
-                        promotion = result.promotion,
-                        totalCount = 0,
-                        promoCount = 0
-                    )
+                    return emptyList()
                 }
-                return OrderResult(
-                    product = result.product,
-                    promotion = result.promotion,
-                    totalCount = order.count,
-                    promoCount = order.count - result.nonPromotional
+                return listOf(
+                    OrderResult(
+                        product = result.promoProduct,
+                        totalCount = order.count,
+                        promoCount = order.count - result.nonPromotional
+                    ),
+                    OrderResult(
+                        product = result.regularProduct,
+                        totalCount = order.count,
+                        promoCount = order.count - result.nonPromotional
+                    )
+
                 )
             }
 
             is PromotionResult.Success -> {
-                return OrderResult(
-                    product = result.product,
-                    promotion = result.promotion,
-                    totalCount = order.count,
-                    promoCount = order.count
+                return listOf(
+                    OrderResult(
+                        product = result.product,
+                        totalCount = order.count,
+                        promoCount = (order.count / (result.promotion.buy + result.promotion.get)) * result.promotion.get
+                    )
                 )
             }
         }
+    }
+
+    fun regularProcess(targetProduct: Product, order: Order): OrderResult {
+        require(order.count <= targetProduct.count) { ErrorMessages.OVER_PRODUCT_STOCK }
+        return OrderResult(
+            product = targetProduct,
+            totalCount = order.count,
+            promoCount = 0
+        )
     }
 
     fun checkMembership(): Boolean {
@@ -110,4 +153,5 @@ class StoreController {
 
         return memberShipYn == "Y"
     }
+
 }

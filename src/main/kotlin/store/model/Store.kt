@@ -11,7 +11,7 @@ object Store {
 
         val productCount = promoProduct.count + product.count
 
-        require(order.count < productCount) { ErrorMessages.OVER_PRODUCT_STOCK }
+        require(order.count <= productCount) { ErrorMessages.OVER_PRODUCT_STOCK }
 
         val promotion: Promotion = promoProduct.promotion!!
         val buyGetTotalCount = (promotion.buy + promotion.get)
@@ -19,7 +19,7 @@ object Store {
         if (order.count == promotion.buy && promoProduct.count >= (promotion.buy + promotion.get)
         ) {
             return PromotionResult.Promotional(
-                product = product,
+                product = promoProduct,
                 promotion = promotion,
             )
         }
@@ -28,13 +28,14 @@ object Store {
             val nonPromotionalCount: Int =
                 order.count - buyGetTotalCount * (promoProduct.count / buyGetTotalCount)
             return PromotionResult.NonPromotional(
+                promoProduct,
                 product,
                 promotion,
                 nonPromotionalCount
             )
         }
         return PromotionResult.Success(
-            product = product,
+            product = promoProduct,
             promotion = promotion,
         )
     }
