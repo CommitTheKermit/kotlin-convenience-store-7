@@ -62,10 +62,14 @@ object OutputView {
             println("%s		%d".format(it.product.name, it.promoCount))
         }
         println("==============================")
-        println("총구매액\t\t%d\t%,d".format(totalCount, promoPrice + nonPromoPrice))
+        println("총구매액\t\t%d\t%,d".format(totalCount, totalPrice))
         println("행사할인\t\t\t-%,d".format(promoDiscount))
         println("멤버십할인\t\t\t-%,.0f".format(membershipDiscount))
         println("내실돈\t\t\t %,.0f".format(promoPrice + nonPromoPrice  - membershipDiscount))
+    }
+
+    fun showBuyAnotherGuide(){
+        println(Messages.BUY_ANOTHER_GUIDE)
     }
 
 
