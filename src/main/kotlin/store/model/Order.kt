@@ -1,5 +1,5 @@
 package store.model
 
-data class Order(val productName: String, val count: Int) {
+data class Order(val productName: String, var count: Int) {
 
 }
