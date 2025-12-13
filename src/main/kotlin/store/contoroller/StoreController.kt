@@ -23,6 +23,7 @@ class StoreController {
             OutputView.showShoppingGuide()
 
             val orders = Parser.orderParse(InputView.readLine())
+            Store.processOrder(orders = orders, storage = storage)
 
 
         }

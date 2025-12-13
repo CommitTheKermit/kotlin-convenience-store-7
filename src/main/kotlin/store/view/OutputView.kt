@@ -17,6 +17,12 @@ object OutputView {
         println(Messages.SHOPPING_GUIDE)
     }
 
+    fun showPromotional(productName: String, count: Int) {
+        println(OutputFormat.PROMOTIONAL_NOTIFY.format(productName, count))
+    }
+    fun showNonPromotional(productName: String, count: Int) {
+        println(OutputFormat.NONPROMOTIONAL_NOTIFY.format(productName, count))
+    }
 
 
 }
