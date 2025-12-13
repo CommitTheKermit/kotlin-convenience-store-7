@@ -17,52 +17,64 @@ class StoreController {
 
         val storage = Storage.products
 
-        shopping(initialStorage = storage)
+        while (true) {
+            val orderResults = shopping(initialStorage = storage)
+            orderResults.forEach { orderResult ->
+                val product = storage.find { shelfProduct -> (shelfProduct == orderResult.product) }
+                product!!.count = product.count - orderResult.totalCount
+            }
+            OutputView.showBuyAnotherGuide()
+            val buyAnotherYn = InputView.readLine()
+            if (buyAnotherYn == "N") {
+                break
+            }
+        }
+
 
     }
 
-    fun shopping(initialStorage: List<Product>) {
+    fun shopping(initialStorage: List<Product>): List<OrderResult> {
         var storage = initialStorage
-        while (true) {
-            OutputView.showStorage(storage)
-            OutputView.showShoppingGuide()
 
-            val orders = Parser.orderParse(InputView.readLine())
-            val orderResults = processOrder(orders = orders, storage = storage)
-            val membershipYn: Boolean = checkMembership()
+        OutputView.showStorage(storage)
+        OutputView.showShoppingGuide()
 
-            var totalCount = 0
-            var nonPromoPrice = 0
-            var promoPrice = 0
-            var totalPrice = 0
-            var promoDiscount = 0
-            var membershipDiscount = 0.0
-            orderResults.filter { it.product.promotion != null }.forEach {
-                promoPrice += (it.totalCount - it.promoCount) * it.product.price
-                promoDiscount += it.promoCount * it.product.price
-            }
-            orderResults.filter { it.product.promotion == null }.forEach {
-                nonPromoPrice += (it.totalCount - it.promoCount) * it.product.price
-            }
-            orderResults.forEach {
-                totalPrice += (it.totalCount) * it.product.price
-                totalCount += it.totalCount - it.promoCount
-            }
+        val orders = Parser.orderParse(InputView.readLine())
+        val orderResults = processOrder(orders = orders, storage = storage)
+        val membershipYn: Boolean = checkMembership()
 
-            if (membershipYn) {
-                membershipDiscount = nonPromoPrice * 0.3
-            }
-
-            OutputView.showReceipt(
-                orderResults = orderResults,
-                totalCount = totalCount,
-                totalPrice = totalPrice,
-                nonPromoPrice = nonPromoPrice,
-                promoPrice = promoPrice,
-                promoDiscount = promoDiscount,
-                membershipDiscount = membershipDiscount,
-            )
+        var totalCount = 0
+        var nonPromoPrice = 0
+        var promoPrice = 0
+        var totalPrice = 0
+        var promoDiscount = 0
+        var membershipDiscount = 0.0
+        orderResults.filter { it.product.promotion != null }.forEach {
+            promoPrice += (it.totalCount - it.promoCount) * it.product.price
+            promoDiscount += it.promoCount * it.product.price
         }
+        orderResults.filter { it.product.promotion == null }.forEach {
+            nonPromoPrice += (it.totalCount - it.promoCount) * it.product.price
+        }
+        orderResults.forEach {
+            totalPrice += (it.totalCount) * it.product.price
+            totalCount += it.totalCount - it.promoCount
+        }
+
+        if (membershipYn) {
+            membershipDiscount = nonPromoPrice * 0.3
+        }
+
+        OutputView.showReceipt(
+            orderResults = orderResults,
+            totalCount = totalCount,
+            totalPrice = totalPrice,
+            nonPromoPrice = nonPromoPrice,
+            promoPrice = promoPrice,
+            promoDiscount = promoDiscount,
+            membershipDiscount = membershipDiscount,
+        )
+        return orderResults
     }
 
     fun processOrder(orders: List<Order>, storage: List<Product>): List<OrderResult> {
@@ -114,15 +126,14 @@ class StoreController {
                 return listOf(
                     OrderResult(
                         product = result.promoProduct,
-                        totalCount = order.count,
-                        promoCount = order.count - result.nonPromotional
+                        totalCount = order.count - result.nonPromotional,
+                        promoCount = ((order.count - result.nonPromotional) / (result.promotion.buy + result.promotion.get)) * result.promotion.get
                     ),
                     OrderResult(
                         product = result.regularProduct,
-                        totalCount = order.count,
-                        promoCount = order.count - result.nonPromotional
+                        totalCount = result.nonPromotional,
+                        promoCount = 0
                     )
-
                 )
             }
 
