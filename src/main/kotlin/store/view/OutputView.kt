@@ -54,21 +54,33 @@ object OutputView {
     ) {
         println("===========W 편의점=============")
         println("상품명\t\t수량\t금액")
-        orderResults.forEach {
-            println("%s\t\t%d \t%,d".format(it.product.name, it.totalCount, it.totalCount * it.product.price))
+        val products = mutableListOf<Product>()
+        orderResults.forEach { orderResult ->
+            val targetProduct = products.filter { product -> product.name == orderResult.product.name }
+            if (targetProduct.isEmpty()) {
+                val product = orderResult.product.copy()
+                product.count = orderResult.totalCount
+                products.add(product)
+            } else {
+                products.find { it.name == orderResult.product.name }!!.count += orderResult.totalCount
+            }
         }
+        products.forEach {
+            println("%s\t\t%d \t%,d".format(it.name, it.count, it.count * it.price))
+        }
+
         println("===========증\t정=============")
-        orderResults.forEach {
+        orderResults.filter { it.product.promotion != null }.forEach {
             println("%s		%d".format(it.product.name, it.promoCount))
         }
         println("==============================")
         println("총구매액\t\t%d\t%,d".format(totalCount, totalPrice))
         println("행사할인\t\t\t-%,d".format(promoDiscount))
         println("멤버십할인\t\t\t-%,.0f".format(membershipDiscount))
-        println("내실돈\t\t\t %,.0f".format(promoPrice + nonPromoPrice  - membershipDiscount))
+        println("내실돈\t\t\t %,.0f".format(promoPrice + nonPromoPrice - membershipDiscount))
     }
 
-    fun showBuyAnotherGuide(){
+    fun showBuyAnotherGuide() {
         println(Messages.BUY_ANOTHER_GUIDE)
     }
 

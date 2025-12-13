@@ -58,7 +58,7 @@ class StoreController {
         }
         orderResults.forEach {
             totalPrice += (it.totalCount) * it.product.price
-            totalCount += it.totalCount - it.promoCount
+            totalCount += it.totalCount
         }
 
         if (membershipYn) {
