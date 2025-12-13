@@ -11,7 +11,6 @@ class StoreController {
     fun run() {
         OutputView.showWelcome()
 
-        val storage = Storage.initStorage()
         val storage = Storage.products
 
         shopping(initialStorage = storage)
@@ -23,6 +22,7 @@ class StoreController {
             OutputView.showStorage(storage)
             OutputView.showShoppingGuide()
 
+            val orders = Parser.orderParse(InputView.readLine())
 
 
         }
