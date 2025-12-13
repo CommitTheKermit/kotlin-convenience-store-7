@@ -26,7 +26,7 @@ object Store {
             )
         }
 //            프로모션 적용 불가능 수량 안내 문구 출력
-        if (promoProduct.count < order.count) {
+        if (promoProduct.count <= order.count) {
             val nonPromotionalCount: Int =
                 order.count - buyGetTotalCount * (promoProduct.count / buyGetTotalCount)
             return PromotionResult.NonPromotional(

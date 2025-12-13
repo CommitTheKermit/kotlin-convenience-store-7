@@ -39,28 +39,32 @@ class StoreController {
             }
 
             if (targetProducts.size > 1) {
-                when (val result: PromotionResult = checkPromo(targetProducts, order)) {
-                    is PromotionResult.Promotional -> {
-                        OutputView.showPromotional(result.product.name, result.promotion.get)
-                        val promotionYn = InputView.readLine()
-                        if (promotionYn == "Y") {
-                            order.count += result.promotion.get
-                        }
-                    }
+                promoProcess(targetProducts, order)
+            }
+        }
 
-                    is PromotionResult.NonPromotional -> {
-                        OutputView.showNonPromotional(result.product.name, result.nonPromotional)
-                        val nonPromotionYn = InputView.readLine()
-                        if (nonPromotionYn == "Y") {
-                            order.count = 0
-                            continue
-                        }
-                    }
+    }
 
-                    PromotionResult.Success -> TODO()
+    fun promoProcess(targetProducts: List<Product>, order: Order) {
+        when (val result: PromotionResult = checkPromo(targetProducts, order)) {
+            is PromotionResult.Promotional -> {
+                OutputView.showPromotional(result.product.name, result.promotion.get)
+                val promotionYn = InputView.readLine()
+                if (promotionYn == "Y") {
+                    order.count += result.promotion.get
                 }
-            } else {
-                orderProcess()
+            }
+
+            is PromotionResult.NonPromotional -> {
+                OutputView.showNonPromotional(result.product.name, result.nonPromotional)
+                val nonPromotionYn = InputView.readLine()
+                if (nonPromotionYn == "N") {
+                    order.count = 0
+                }
+            }
+
+            PromotionResult.Success -> {
+                return
             }
         }
     }
