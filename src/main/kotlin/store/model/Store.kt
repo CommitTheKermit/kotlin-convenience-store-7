@@ -1,12 +1,10 @@
 package store.model
 
-import PromotionResult
 import store.constants.ErrorMessages
 
 object Store {
     fun checkPromo(targetProducts: List<Product>, order: Order): PromotionResult {
         val (promoProducts, products) = targetProducts.partition { it.promotion != null }
-        val sortedProducts = promoProducts + products
 
         val promoProduct = promoProducts.first()
         val product = products.first()
@@ -31,10 +29,14 @@ object Store {
                 order.count - buyGetTotalCount * (promoProduct.count / buyGetTotalCount)
             return PromotionResult.NonPromotional(
                 product,
+                promotion,
                 nonPromotionalCount
             )
         }
-        return PromotionResult.Success
+        return PromotionResult.Success(
+            product = product,
+            promotion = promotion,
+        )
     }
 
     fun orderProcess() {}

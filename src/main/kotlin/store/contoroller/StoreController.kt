@@ -1,11 +1,11 @@
 package store.contoroller
 
-import PromotionResult
+import store.model.PromotionResult
 import store.model.Order
+import store.model.OrderResult
 import store.model.Parser
 import store.model.Product
 import store.model.Storage
-import store.model.Store.orderProcess
 import store.model.Store.checkPromo
 import store.view.InputView
 import store.view.OutputView
@@ -28,10 +28,14 @@ class StoreController {
 
             val orders = Parser.orderParse(InputView.readLine())
             processOrder(orders = orders, storage = storage)
+            val membershipYn : Boolean  = checkMembership()
+
+
         }
     }
 
-    fun processOrder(orders: List<Order>, storage: List<Product>) {
+    fun processOrder(orders: List<Order>, storage: List<Product>): List<OrderResult> {
+        val orderResults = mutableListOf<OrderResult>()
         for (order in orders) {
             val targetProducts = storage.filter { product -> product.name == order.productName }
             if (targetProducts.isEmpty()) {
@@ -39,13 +43,21 @@ class StoreController {
             }
 
             if (targetProducts.size > 1) {
-                promoProcess(targetProducts, order)
+                val orderResult: OrderResult = promoProcess(targetProducts, order)
+
+                orderResults.add(orderResult)
             }
+
+
+//            else{
+//                regularProcess(targetProducts.first, order)
+//            }
         }
+        return orderResults
 
     }
 
-    fun promoProcess(targetProducts: List<Product>, order: Order) {
+    fun promoProcess(targetProducts: List<Product>, order: Order): OrderResult {
         when (val result: PromotionResult = checkPromo(targetProducts, order)) {
             is PromotionResult.Promotional -> {
                 OutputView.showPromotional(result.product.name, result.promotion.get)
@@ -53,6 +65,12 @@ class StoreController {
                 if (promotionYn == "Y") {
                     order.count += result.promotion.get
                 }
+                return OrderResult(
+                    product = result.product,
+                    promotion = result.promotion,
+                    totalCount = order.count,
+                    promoCount = order.count
+                )
             }
 
             is PromotionResult.NonPromotional -> {
@@ -60,12 +78,36 @@ class StoreController {
                 val nonPromotionYn = InputView.readLine()
                 if (nonPromotionYn == "N") {
                     order.count = 0
+                    return OrderResult(
+                        product = result.product,
+                        promotion = result.promotion,
+                        totalCount = 0,
+                        promoCount = 0
+                    )
                 }
+                return OrderResult(
+                    product = result.product,
+                    promotion = result.promotion,
+                    totalCount = order.count,
+                    promoCount = order.count - result.nonPromotional
+                )
             }
 
-            PromotionResult.Success -> {
-                return
+            is PromotionResult.Success -> {
+                return OrderResult(
+                    product = result.product,
+                    promotion = result.promotion,
+                    totalCount = order.count,
+                    promoCount = order.count
+                )
             }
         }
+    }
+
+    fun checkMembership(): Boolean {
+        OutputView.showMemberShip()
+        val memberShipYn = InputView.readLine()
+
+        return memberShipYn == "Y"
     }
 }

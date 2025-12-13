@@ -20,9 +20,13 @@ object OutputView {
     fun showPromotional(productName: String, count: Int) {
         println(OutputFormat.PROMOTIONAL_NOTIFY.format(productName, count))
     }
+
     fun showNonPromotional(productName: String, count: Int) {
         println(OutputFormat.NONPROMOTIONAL_NOTIFY.format(productName, count))
     }
 
+    fun showMemberShip() {
+        println(Messages.MEMBERSHIP)
+    }
 
 }
