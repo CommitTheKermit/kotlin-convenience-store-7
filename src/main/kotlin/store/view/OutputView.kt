@@ -21,8 +21,18 @@ object OutputView {
             }
             println("- %s %,d %d개 %s".format(it.name, it.price, it.quantity, it.promotion?.name ?: ""))
         }
-
     }
+
+    fun showProductInputGuide() {
+        println(
+            "구매하실 상품명과 수량을 입력해 주세요. (예: [사이다-2],[감자칩-1])"
+        )
+    }
+
+    fun showError(error: String) {
+        println(error)
+    }
+
 }
 
 
