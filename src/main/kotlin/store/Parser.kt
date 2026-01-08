@@ -23,4 +23,11 @@ object Parser {
 
         return orders
     }
+
+    fun parseYN(input: String): Boolean {
+        require(listOf("Y", "N", "y", "n").contains(input)) { "[ERROR] 잘못된 입력입니다. 다시 입력해 주세요." }
+
+        return listOf("Y", "y").contains(input)
+
+    }
 }

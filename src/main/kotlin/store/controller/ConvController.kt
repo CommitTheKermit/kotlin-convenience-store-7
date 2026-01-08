@@ -33,24 +33,51 @@ class ConvController {
 
             var amount = 0
             orders.forEach { order ->
-                val status: PromoProcessStatus = convService.processOrder(
+                val result: Pair<PromoProcessStatus, Int> = convService.processOrder(
                     order = order
                 )
 
-                when (status) {
-                    PromoProcessStatus.NORMAL -> {
+                when (result.first) {
+                    PromoProcessStatus.PROMO_NORMAL -> {
                         amount += convService.processPromo(
-                            order = order
+                            order = order, status = result.first
                         )
                     }
 
                     PromoProcessStatus.APPLICABLE -> {
+                        OutputView.showPromoApplicable(order = order)
+                        val yn = Parser.parseYN(InputView.readLine())
+
+                        amount += if (yn) {
+                            convService.processPromo(order = order, status = result.first)
+                        } else {
+                            convService.processPromo(order = order, status = PromoProcessStatus.PROMO_NORMAL)
+                        }
+                    }
+
+                    PromoProcessStatus.INSUFFICIENT -> {
+                        OutputView.showPromoInsufficient(
+                            order = order,
+                            insufficientCount = result.second
+                        )
+                        val yn = Parser.parseYN(InputView.readLine())
+                        amount += if (yn) {
+                            convService.processPromo(order = order, status = PromoProcessStatus.INSUFFICIENT)
+                        } else {
+                            0
+                        }
 
                     }
-                    PromoProcessStatus.INSUFFICIENT -> TODO()
+
+                    PromoProcessStatus.NORMAL -> {
+                        amount += convService.processNormal(
+                            order = order,
+                            status = PromoProcessStatus.NORMAL
+                        )
+                    }
                 }
             }
-
+            println(amount)
 
         } catch (e: IllegalArgumentException) {
             OutputView.showError(e.message ?: "")
