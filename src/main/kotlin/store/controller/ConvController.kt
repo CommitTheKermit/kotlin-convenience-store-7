@@ -2,6 +2,7 @@ package store.controller
 
 import store.Parser
 import store.Validator
+import store.constants.PromoProcessStatus
 import store.model.Product
 import store.model.Promotion
 import store.service.ConvService
@@ -13,6 +14,10 @@ class ConvController {
 
     var promos: List<Promotion> = FileService.promoFileRead()
     var products: List<Product> = FileService.productFileRead(promos = promos)
+    val convService = ConvService(
+        products = products
+    )
+
     fun run() {
         try {
             OutputView.showStartGuide()
@@ -28,10 +33,22 @@ class ConvController {
 
             var amount = 0
             orders.forEach { order ->
-                amount += ConvService.processOrder(
-                    products = products,
+                val status: PromoProcessStatus = convService.processOrder(
                     order = order
                 )
+
+                when (status) {
+                    PromoProcessStatus.NORMAL -> {
+                        amount += convService.processPromo(
+                            order = order
+                        )
+                    }
+
+                    PromoProcessStatus.APPLICABLE -> {
+
+                    }
+                    PromoProcessStatus.INSUFFICIENT -> TODO()
+                }
             }
 
 

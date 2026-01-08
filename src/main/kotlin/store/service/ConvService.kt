@@ -4,10 +4,10 @@ import store.constants.PromoProcessStatus
 import store.model.Order
 import store.model.Product
 
-object ConvService {
+class ConvService(val products: List<Product>) {
     fun processOrder(
-        products: List<Product>, order: Order
-    ): Int {
+        order: Order
+    ): PromoProcessStatus {
         var amount = 0
 
         val promoProduct = products.find { product -> product.name == order.name && product.promotion != null }
@@ -15,26 +15,24 @@ object ConvService {
 
         if (promoProduct != null) {
             if (promoProduct.quantity >= order.quantity) {
-                promoProduct.quantity -= order.quantity
-
-                amount += processPromo(
-                    promoProduct = promoProduct,
-                    order = order
-                )
-                return amount
+                return PromoProcessStatus.NORMAL
             }
         }
 
 
 
-        return 0
+        return PromoProcessStatus.NORMAL
     }
 
-    fun processPromo(promoProduct: Product, order: Order): Int {
+    fun processPromo(order: Order): Int {
         var amount = 0
+        val promoProduct = products.find { product -> product.name == order.name && product.promotion != null }!!
+
         val promo = promoProduct.promotion!!
         val total = promo.buy + promo.get
         amount = ((order.quantity / total * promo.buy) + order.quantity % total) * promoProduct.price
+
+        promoProduct.quantity -= order.quantity
 
         return amount
     }
