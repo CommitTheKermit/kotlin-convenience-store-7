@@ -1,3 +1,3 @@
 package store.model
 
-data class Order(val name: String, var quantity: Int)
+data class Order(val product: Product, var quantity: Int)

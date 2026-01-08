@@ -2,6 +2,7 @@ package store.service
 
 import store.constants.PromoProcessStatus
 import store.model.Order
+import store.model.ProcessResult
 import store.model.Product
 
 class ConvService(val products: List<Product>) {
@@ -10,32 +11,34 @@ class ConvService(val products: List<Product>) {
     ): Pair<PromoProcessStatus, Int> {
         var amount = 0
 
-        val promoProduct = products.find { product -> product.name == order.name && product.promotion != null }
-        val regularProduct = products.find { product -> product.name == order.name && product.promotion == null }!!
+        val promoProduct = products.find { product -> product.name == order.product.name && product.promotion != null }
+        val regularProduct =
+            products.find { product -> product.name == order.product.name && product.promotion == null }!!
 
         if (promoProduct != null) {
             val promo = promoProduct.promotion!!
             val total = promo.buy + promo.get
-            if (promoProduct.quantity >= order.quantity && promoProduct.quantity % total == 0) {
-                return Pair(PromoProcessStatus.PROMO_NORMAL, 0)
-            }
+
 
             if (order.quantity % total == promo.buy) {
-                Pair(PromoProcessStatus.APPLICABLE, 0)
+                return Pair(PromoProcessStatus.APPLICABLE, 0)
             }
 
             if (promoProduct.quantity < order.quantity) {
                 val insufficient = order.quantity - promoProduct.quantity
                 return Pair(PromoProcessStatus.INSUFFICIENT, insufficient)
             }
+
+            return Pair(PromoProcessStatus.PROMO_NORMAL, 0)
         }
 
         return Pair(PromoProcessStatus.NORMAL, 0)
     }
 
-    fun processPromo(order: Order, status: PromoProcessStatus): Int {
+    fun processPromo(order: Order, status: PromoProcessStatus): ProcessResult {
         var amount = 0
-        val promoProduct = products.find { product -> product.name == order.name && product.promotion != null }!!
+        val promoProduct =
+            products.find { product -> product.name == order.product.name && product.promotion != null }!!
 
         val promo = promoProduct.promotion!!
         val total = promo.buy + promo.get
@@ -48,12 +51,17 @@ class ConvService(val products: List<Product>) {
 
         promoProduct.quantity -= order.quantity
 
-        return amount
+        return ProcessResult(
+            appliedPromo = promo,
+            applyCount = order.quantity / total,
+            product = promoProduct
+        )
     }
 
-    fun processNormal(order: Order, status: PromoProcessStatus): Int {
+    fun processNormal(order: Order): Int {
         var amount = 0
-        val regularProduct = products.find { product -> product.name == order.name && product.promotion == null }!!
+        val regularProduct =
+            products.find { product -> product.name == order.product.name && product.promotion == null }!!
 
         amount = order.quantity * regularProduct.price
 
