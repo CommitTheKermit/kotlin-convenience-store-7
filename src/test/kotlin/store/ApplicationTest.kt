@@ -59,6 +59,21 @@ class ApplicationTest : NsTest() {
         }
     }
 
+    @Test
+    fun `프로모션 정상 테스트`() {
+        assertSimpleTest {
+            runException("[콜라-7]", "N", "N")
+            assertThat(output()).contains("[ERROR] 재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.")
+        }
+    }
+    @Test
+    fun `프로모션 정상 테스트2`() {
+        assertSimpleTest {
+            runException("[오렌지주스-4]", "N", "N")
+            assertThat(output()).contains("[ERROR] 재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.")
+        }
+    }
+
     override fun runMain() {
         main()
     }
